@@ -5,6 +5,7 @@ import json
 import sklearn.decomposition as skld
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from oja import OjaPCA
 
 log.basicConfig(
     level=log.DEBUG,
@@ -81,7 +82,7 @@ def plot_biplot(X_reducido, paises, pca, feature_names):
     ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('out/biplot.png', dpi=300, bbox_inches='tight')
+    plt.savefig('out/biplot_oja.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 # Plot PC1
@@ -107,7 +108,7 @@ def plot_pc1_bars(X_reducido, paises):
     ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('out/pc1_bars.png', dpi=300, bbox_inches='tight')
+    plt.savefig('out/pc1_bars_oja.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 def perform_pca(names, data, headers, n_components=2):
@@ -119,19 +120,32 @@ def perform_pca(names, data, headers, n_components=2):
     plot_biplot(transformed_data, names, pca, headers)
     plot_pc1_bars(transformed_data, names)
 
+
 if __name__ == "__main__":
     # Cargar configuración
-    config = json.load(open('config/default_config.json'))
+    config = json.load(open('config/oja_config.json'))
     input_data = config['input']['data_path']
 
     names, data, headers = load_csv(input_data)
+    
+    # Estandarizar datos
+    scaler = StandardScaler()
+    data_std = scaler.fit_transform(data)
 
-    # Normalizar los datos
-    data_normalized = StandardScaler().fit_transform(data)
-    with open("logs/lib_data.log","w") as f:
-        f.write("Lib Data:\n")
-        for name, row in zip(names, data_normalized):
+    # usar Oja
+    log.info("Starting Oja PCA computation.")
+    oja_pca = OjaPCA(
+        learning_rate=config['pca_parameters']['learning_rate'], 
+        n_epochs=config['pca_parameters']['n_epochs']
+        )
+    oja_pca.fit(data_std)
+
+    data_oja_reduced = oja_pca.transform(data_std)
+    log.info("Oja PCA transformation completed.")
+    with open("logs/oja_data.log","w") as f:
+        f.write("Oja Data:\n")
+        for name, row in zip(names, data_oja_reduced):
             f.write(f"{name};{np.array2string(row[0], precision=4)}\n")
-    log.info("Original Data Shape: %s", data_normalized.shape)
-    reduced_data = perform_pca(names, data_normalized, headers, n_components=2)
-    log.info("PCA process completed.")
+    log.info("Plotting Oja PCA results.")
+    plot_pc1_bars(data_oja_reduced, names)
+    
