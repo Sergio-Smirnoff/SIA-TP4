@@ -1,0 +1,15 @@
+{
+    "root_path": "PCA/",
+    "input": {
+        "data_path": "in/europe.csv",
+        "delimiter": ",",
+        "header": true
+    },
+    "output": {
+        "results_path": "out",
+        "log_path": "logs/execution.log"
+    },
+    "pca_parameters": {
+        "method": "libreria"
+    }
+}
