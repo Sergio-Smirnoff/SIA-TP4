@@ -1,16 +1,19 @@
 
 import numpy as np
 import logging as log
+import sklearn.preprocessing as StandardScaler 
 
 class OjaPCA:
     """
     Implementación de la Regla de Oja para calcular la primera componente principal.
     Converge al autovector correspondiente al mayor autovalor de la matriz de covarianzas.
     """
-    def __init__(self, learning_rate=0.001, n_epochs=100):
+    def __init__(self, learning_rate=0.01, n_epochs=10000):
         self.learning_rate = learning_rate
         self.n_epochs = n_epochs
         self.w = None
+
+        np.random.seed(42)
         
     def fit(self, X):
         """
@@ -29,9 +32,18 @@ class OjaPCA:
         log.info("Training Oja's rule for PC1...")
         
         for epoch in range(self.n_epochs):
-            y = np.dot(X, self.w)
-            updates = y[:, np.newaxis] * (X - y[:, np.newaxis] * self.w)
-            self.w += self.learning_rate * np.mean(updates, axis=0)
+            O = np.dot(X, self.w)
+            
+            w_norm = np.linalg.norm(self.w)
+
+            term1 = np.dot(X.T, O) / w_norm
+
+            sum_term = np.dot(O,O)
+            term2 = (sum_term * self.w) / (w_norm ** 3)
+
+            delta_w = (term1 - term2) / n_samples
+            self.w += self.learning_rate * delta_w
+
             self.w = self.w / np.linalg.norm(self.w)
             
             if (epoch + 1) % 20 == 0:

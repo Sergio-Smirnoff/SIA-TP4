@@ -11,8 +11,8 @@
     },
     "pca_parameters": {
         "method": "oja",
-        "learning_rate": 0.001,
-        "n_epochs": 200
+        "learning_rate": 0.01,
+        "n_epochs": 20000
 
     }
 }
