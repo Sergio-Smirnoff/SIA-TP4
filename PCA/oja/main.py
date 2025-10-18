@@ -103,7 +103,7 @@ def plot_pc1_bars(X_reducido, paises):
     ax.set_xticks(range(len(paises_ordenados)))
     ax.set_xticklabels(paises_ordenados, rotation=90, ha='right')
     ax.set_ylabel('PC1 value')
-    ax.set_title('PC1 por Country')
+    ax.set_title('PC1 por Country - Método Oja')
     ax.axhline(0, color='black', linewidth=0.8, linestyle='-')
     ax.grid(True, alpha=0.3, axis='y')
     
