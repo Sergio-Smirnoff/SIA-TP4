@@ -76,9 +76,9 @@ class Kohonen:
         log.info("Training Kohonen completed")
 
     def predict(self, x):
-        return np.array([self.get_best_neuron(xi) for xi in x])
+        return np.array([self.get_best_neuron(xi) for xi in x]), self.unified_distance_matrix()
     
-    
+    def unified_distance_matrix(self):
         """
         Calcula la U-Matrix (Unified Distance Matrix) para visualizar las distancias
         entre neuronas vecinas.
@@ -87,33 +87,24 @@ class Kohonen:
         weights = self.weights
         u_matrix = np.zeros((k, k))
 
-        for i in range(self.k):
-            for j in range(self.k):
-                distance_to_neighbor = np.sqrt((i - neighbor[0])**2 + (j - idx[1])**2)
-                # Buscamos si es vecina
-                if distance_to_best_neuron < self.r:
-                    # Actualizamos pesos
-                    self.weights[i, j] += self.learning_rate * (x - self.weights[i, j])
-
         for i in range(k):
             for j in range(k):
                 current_weight = weights[i, j]
                 distances_sum = 0
                 neighbors_count = 0
-
-                # Vecino de arriba
+                # Arriba
                 if i > 0:
                     distances_sum += np.linalg.norm(current_weight - weights[i - 1, j])
                     neighbors_count += 1
-                # Vecino de abajo
+                # Abajo
                 if i < k - 1:
                     distances_sum += np.linalg.norm(current_weight - weights[i + 1, j])
                     neighbors_count += 1
-                # Vecino de la izquierda
+                # Izquierda
                 if j > 0:
                     distances_sum += np.linalg.norm(current_weight - weights[i, j - 1])
                     neighbors_count += 1
-                # Vecino de la derecha
+                # Derecha
                 if j < k - 1:
                     distances_sum += np.linalg.norm(current_weight - weights[i, j + 1])
                     neighbors_count += 1

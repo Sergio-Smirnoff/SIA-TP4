@@ -24,25 +24,21 @@ def load_csv(file_path):
 
 #======================== ANALYSIS ===================================
 
-def heat_map(kohonen, k, data_normalized, names, output_path):
+def heat_map(neurons, k, names, output_path):
     log.info("Generating heatmap analysis plot...")
-
-    # 1. Obtener la neurona para cada país
-    neurons = kohonen.predict(data_normalized)
-    
-    # 2. Contar entradas por neurona
+    # 1. Contar entradas por neurona
     hit_map = np.zeros((k, k))
     for (i, j) in neurons:
         hit_map[i, j] += 1
         
-    # 3. Crear un mapa de etiquetas para los países
+    # 2. Crear un mapa de etiquetas para los países
     label_map = {}
     for t, (i, j) in enumerate(neurons):
         if (i, j) not in label_map:
             label_map[(i, j)] = []
         label_map[(i, j)].append(names[t])
 
-    # 4. Graficar
+    # 3. Graficar
     fig, ax = plt.subplots(figsize=(7, 7), dpi=150)  
     im = ax.imshow(hit_map, cmap='PiYG', interpolation='nearest', origin='lower')
     ax.set_xticks(np.arange(k))
@@ -73,6 +69,25 @@ def heat_map(kohonen, k, data_normalized, names, output_path):
     log.info("Country heat map saved")
     plt.show()
 
+
+def unified_distance_matrix(u_matrix, k, output_path):
+    log.info("Generating U-Matrix plot...")
+
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=150)
+    im = ax.imshow(u_matrix, cmap='RdPu', interpolation='nearest', origin='lower')
+
+    ax.set_xticks(np.arange(k))
+    ax.set_yticks(np.arange(k))
+    ax.set_xticklabels(np.arange(k))
+    ax.set_yticklabels(np.arange(k))
+
+    ax.set_title("Distancia entre neuronas vecinas")
+    fig.colorbar(im, ax=ax, label="Distancia promedio")
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/kohonen_u_matrix.png")
+    log.info("U-Matrix saved")
+    plt.show()
+
 #=====================================================================
 
 if __name__ == "__main__":
@@ -100,7 +115,9 @@ if __name__ == "__main__":
     )
     kohonen.train()
 
-    heat_map(kohonen, kohonen.k, data_normalized, names, output_path)
+    neurons, u_matrix = kohonen.predict(data_normalized)
 
-    
+    heat_map(neurons, kohonen.k, names, output_path)
+
+    unified_distance_matrix(u_matrix, kohonen.k, output_path)
     
