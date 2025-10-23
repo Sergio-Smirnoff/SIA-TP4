@@ -88,10 +88,121 @@ def unified_distance_matrix(u_matrix, k, output_path):
     log.info("U-Matrix saved")
     plt.show()
 
+def plot_variable_on_som(data, neurons, variable_index, k, output_path, variable_name="Variable"):
+    value_map = np.zeros((k, k))
+    count_map = np.zeros((k, k))
+
+    for idx, (i, j) in enumerate(neurons):
+        value = data[idx, variable_index]
+        value_map[i, j] += value
+        count_map[i, j] += 1
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        average_map = np.divide(value_map, count_map)
+        average_map[np.isnan(average_map)] = 0 
+
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=150)
+    im = ax.imshow(average_map, cmap='coolwarm', interpolation='nearest', origin='lower')
+
+    ax.set_xticks(np.arange(k))
+    ax.set_yticks(np.arange(k))
+    ax.set_xticklabels(np.arange(k))
+    ax.set_yticklabels(np.arange(k))
+
+    ax.set_title(f"Mapa SOM - {variable_name}")
+    fig.colorbar(im, ax=ax, label=f"{variable_name} (promedio normalizado)")
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/som_variable_{variable_name.lower().replace(' ', '_')}.png")
+    log.info(f"Mapa de variable '{variable_name}' guardado.")
+    plt.show()
+
+def k_analisis(k):
+    """
+    Ejecuta múltiples tiradas del SOM de Kohonen y genera el heatmap y U-Matrix promedio.
+    """
+    # Cargar configuración
+    config = json.load(open('config/kohonen_config.json'))
+    input_data = config['input']['data_path']
+    output_path = config['output']['results_path']
+
+    names, data, headers = load_csv(input_data)
+        
+    # Normalizar los datos
+    data_normalized = StandardScaler().fit_transform(data)
+
+    accumulated_heatmap = np.zeros((k, k))
+    accumulated_umatrix = np.zeros((k, k))
+
+    n_runs = 100
+
+    for i in range(n_runs):
+        np.random.seed(i)
+
+        # usar Kohonen
+        log.info("Starting Kohonen computation.")
+        kohonen = Kohonen(
+            k=k,
+            data=data_normalized,
+            init_r=config['pca_parameters']['init_r'],
+            init_learning_rate=config['pca_parameters']['init_learning_rate'], 
+            epochs_rate=config['pca_parameters']['epochs_rate'],
+            similarity=config['pca_parameters']['similarity'],
+            replace=config['pca_parameters']['replace']
+        )
+        kohonen.train()
+
+        neurons, u_matrix = kohonen.predict(data_normalized)
+        
+        # Contar hits de esta tirada
+        hitmap = np.zeros((k, k))
+        for (i, j) in neurons:
+            hitmap[i, j] += 1
+
+        accumulated_heatmap += hitmap
+        accumulated_umatrix += u_matrix
+    
+    # Promediar sobre tiradas
+    mean_heatmap = accumulated_heatmap / n_runs
+    mean_umatrix = accumulated_umatrix / n_runs
+
+    log.info("Generando mapas promedios...")
+
+    # =============== GRÁFICOS ===============
+
+    ## HEATMAP PROMEDIO
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=150)
+    im = ax.imshow(mean_heatmap, cmap='YlGnBu', interpolation='nearest', origin='lower')
+    ax.set_xticks(np.arange(k))
+    ax.set_yticks(np.arange(k))
+    ax.set_xticklabels(np.arange(k))
+    ax.set_yticklabels(np.arange(k))
+    ax.set_title(f"Frecuencia promedio de activación - k={k}")
+    fig.colorbar(im, ax=ax, label="Promedio de activaciones")
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/mean_heatmap_k{k}.png")
+    plt.show()
+
+    ## U-MATRIX PROMEDIO
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=150)
+    im = ax.imshow(mean_umatrix, cmap='RdPu', interpolation='nearest', origin='lower')
+    ax.set_xticks(np.arange(k))
+    ax.set_yticks(np.arange(k))
+    ax.set_xticklabels(np.arange(k))
+    ax.set_yticklabels(np.arange(k))
+    ax.set_title(f"U-Matrix promedio - k={k}")
+    fig.colorbar(im, ax=ax, label="Distancia promedio")
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/mean_umatrix_k{k}.png")
+    plt.show()
+
+    log.info(f"Análisis completado para k={k}.")
+    return mean_heatmap, mean_umatrix
+
 #=====================================================================
 
-if __name__ == "__main__":
-    np.random.seed(56)
+def ej1():
+    #np.random.seed(56)
+    np.random.seed(99)
     # Cargar configuración
     config = json.load(open('config/kohonen_config.json'))
     input_data = config['input']['data_path']
@@ -121,3 +232,12 @@ if __name__ == "__main__":
 
     unified_distance_matrix(u_matrix, kohonen.k, output_path)
     
+    for variable_index in range(len(headers)):
+        plot_variable_on_som(data_normalized, neurons, variable_index, kohonen.k, output_path, variable_name=headers[variable_index])
+
+
+if __name__ == "__main__":
+    ej1()
+    # ks = [3,4,5]
+    # for k in ks:
+    #     k_analisis(k)

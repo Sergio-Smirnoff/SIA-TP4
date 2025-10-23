@@ -13,8 +13,8 @@
         "method": "kohonen",
         "k": 3,
         "init_r": 3,
-        "init_learning_rate": 0.1,
-        "epochs_rate": 200,
+        "init_learning_rate": 1,
+        "epochs_rate": 1000,
         "similarity": "euclidean",
         "replace": false
     }
