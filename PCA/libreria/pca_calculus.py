@@ -115,7 +115,14 @@ def perform_pca(names, data, headers, n_components=2):
     pca = skld.PCA(n_components=n_components)
     transformed_data = pca.fit_transform(data)
     log.info("PCA computation finished.")
-
+    log.info("Saving weights to out/pca_weights.csv")
+    loadings_df = pd.DataFrame(
+        pca.components_.T,  # Transponer para que variables sean filas
+        columns=['PC1', 'PC2'],
+        index=headers
+    )
+    loadings_df.to_csv('out/pca_weights.csv')
+    log.info("Weights saved.")
     plot_biplot(transformed_data, names, pca, headers)
     plot_pc1_bars(transformed_data, names)
 

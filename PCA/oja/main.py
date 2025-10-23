@@ -111,16 +111,6 @@ def plot_pc1_bars(X_reducido, paises):
     plt.savefig('out/pc1_bars_oja.png', dpi=300, bbox_inches='tight')
     plt.show()
 
-def perform_pca(names, data, headers, n_components=2):
-    log.info("Starting PCA computation.")
-    pca = skld.PCA(n_components=n_components)
-    transformed_data = pca.fit_transform(data)
-    log.info("PCA computation finished.")
-
-    plot_biplot(transformed_data, names, pca, headers)
-    plot_pc1_bars(transformed_data, names)
-
-
 if __name__ == "__main__":
     # Cargar configuración
     config = json.load(open('config/oja_config.json'))
@@ -140,6 +130,17 @@ if __name__ == "__main__":
         )
     oja_pca.fit(data_std)
 
+    log.info("Oja PCA fitting completed.")
+    log.info("Saving weights to out/oja_weights.csv")
+    weights = np.array(oja_pca.w)
+    loadings_df = pd.DataFrame(
+        weights.T,  # Transponer para que variables sean filas
+        columns=['PC1'],
+        index=headers
+    )
+
+    loadings_df.to_csv(f'out/oja_weights_{config["pca_parameters"]["learning_rate"]}_{config["pca_parameters"]["n_epochs"]}.csv')
+    log.info("Weights saved.")
     data_oja_reduced = oja_pca.transform(data_std)
     log.info("Oja PCA transformation completed.")
     with open("logs/oja_data.log","w") as f:
