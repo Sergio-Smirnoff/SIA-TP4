@@ -1,0 +1,21 @@
+{
+    "root_path": "PCA/",
+    "input": {
+        "data_path": "in/europe.csv",
+        "delimiter": ",",
+        "header": true
+    },
+    "output": {
+        "results_path": "out",
+        "log_path": "logs/execution.log"
+    },
+    "pca_parameters": {
+        "method": "kohonen",
+        "k": 3,
+        "init_r": 3,
+        "init_learning_rate": 1,
+        "epochs_rate": 1000,
+        "similarity": "euclidean",
+        "replace": false
+    }
+}
