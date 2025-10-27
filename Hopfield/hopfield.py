@@ -48,24 +48,28 @@ class HopfieldNetwork:
 
 
     def initialize_weights(self):
+        N = self.network_size
+        W = np.zeros((N, N), dtype=float)
+        # patterns come as lists/np arrays of shape (N,)
         for pattern in self.starting_patterns:
-            for i in range(self.network_size):
-                for j in range(self.network_size):
-                    if i != j:
-                        self.weights[i][j] += pattern[i] * pattern[j]
-        # Normalizar los pesos dividiendo por el numero de patrones
-        num_patterns = len(self.starting_patterns)
-        for i in range(self.network_size):
-            for j in range(self.network_size):
-                self.weights[i][j] /= num_patterns
+            v = np.asarray(pattern, dtype=float).reshape(N, 1)
+            W += v @ v.T
+        np.fill_diagonal(W, 0.0)  # no self-connections
+        W /= N
+        self.weights = W.tolist()
 
     def recall(self, pattern: np.array, max_iter=100):
         """
         Args:
             pattern (np.array): The input pattern to recall from the network. p = [1, -1, 1,...] of size NETWORK_SIZE
+
+        Returns:
+            np.array: list of results for each step.
+            
         """
         if len(pattern) != self.network_size:
             raise ValueError("Input pattern size must match the network size.")
+        results_by_step = []
         current_pattern = pattern.copy()
         for it in range(max_iter):
             changed = False
@@ -75,6 +79,10 @@ class HopfieldNetwork:
                 if pattern_new_i != current_pattern[i]:
                     current_pattern[i] = pattern_new_i
                     changed = True
+            results_by_step.append(current_pattern.copy())
             if not changed:
                 break
-        return current_pattern
+        
+        #return all results by step
+        #access last result with results_by_step[-1]
+        return results_by_step
