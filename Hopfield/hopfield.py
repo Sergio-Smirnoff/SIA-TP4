@@ -70,6 +70,7 @@ class HopfieldNetwork:
         if len(pattern) != self.network_size:
             raise ValueError("Input pattern size must match the network size.")
         results_by_step = []
+        results_by_step.append(pattern.copy())  #dejo el primero para graficarlo
         current_pattern = pattern.copy()
         for it in range(max_iter):
             changed = False
