@@ -97,7 +97,7 @@ def check_orthogonality(patterns, pattern_names):
         row = f"{p1_name: >4} |"
         for j, p2_name in enumerate(pattern_names):
             dot_product = np.dot(patterns[i], patterns[j])
-            row += f"{dot_product: 4d}"
+            row += f" {dot_product/25: .2f} "
         print(row)
     print("-" * 30)
 
