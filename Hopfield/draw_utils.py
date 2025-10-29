@@ -4,6 +4,7 @@ from typing import List, Sequence, Tuple, Union
 import numpy as np
 import pygame
 from PIL import Image
+import matplotlib.pyplot as plt
 
 MatrixLike = Union[List[List[int]], List[int], np.ndarray]
 
@@ -169,3 +170,40 @@ def save_gif_5x5(
         optimize=False,
         disposal=2,
     )
+
+def get_pattern_letter(pattern_idx: int) -> str:
+    if(pattern_idx == 0):
+       return "N"
+    elif(pattern_idx == 1):
+       return "S"
+    elif(pattern_idx == 2):
+       return "C"
+    elif(pattern_idx == 3):
+       return "J"
+
+
+def plot_accuracy(noise_bits, accuracy, accuracy_per_pattern=None, title="Tasa de aciertos vs. ruido"):
+    """
+    Simple matplotlib plotter.
+    """
+    plt.figure(figsize=(7, 4.5))
+    # global curve
+    plt.plot(noise_bits, accuracy, label='Media global')
+    # optionally show faint per-pattern curves
+    if accuracy_per_pattern is not None:
+        for i in range(accuracy_per_pattern.shape[0]):
+            plt.plot(
+                noise_bits, 
+                accuracy_per_pattern[i],
+                alpha=0.5,
+                label=f'{get_pattern_letter(i)}')
+            
+
+    plt.xlabel("Bits flippeados")
+    plt.ylabel("Tasa de aciertos")
+    plt.title(title)
+    plt.ylim(-0.05, 1.05)
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
