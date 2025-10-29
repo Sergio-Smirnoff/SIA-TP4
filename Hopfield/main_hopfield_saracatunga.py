@@ -3,7 +3,7 @@ import numpy as np
 import pygame
 import os
 from hopfield import HopfieldNetwork
-from draw_utils import save_gif_5x5, save_matrix_image, plot_accuracy
+from draw_utils import plot_avg_energies, save_gif_5x5, save_matrix_image, plot_accuracy, get_pattern_letter
 
 def run_test():
 
@@ -134,6 +134,50 @@ def accuracy_by_step(initial_patterns, rows, cols, trials_per_level=10, treat_ne
     acc_global = acc_per_pat.mean(axis=0)
     return np.arange(N + 1), acc_global, acc_per_pat
 
+def avg_energy_by_step(get_initial_patterns, HopfieldNetwork, network_size=25, trials=100, max_iter=100, add_noise_bits=0, seed=123):
+    """
+    Calcula energía promedio por paso para cada patrón.
+    - add_noise_bits: si >0, invierte aleatoriamente esa cantidad de bits al patrón inicial en cada corrida.
+    Devuelve:
+      energies_avg: lista de arrays (uno por patrón) con la energía promedio en cada paso.
+      energies_trials: lista (por patrón) de listas (por corrida) con arrays de energía por paso.
+    """
+    rng = np.random.default_rng(seed)
+    patterns = get_initial_patterns()
+    hop = HopfieldNetwork(NETWORK_SIZE=network_size, starting_patterns=patterns)
+
+    energies_avg = []
+    energies_trials = []
+
+    for p_idx, base in enumerate(patterns):
+        trial_series = []
+
+        for t in range(trials):
+            x0 = base.copy()
+            if add_noise_bits > 0:
+                idx_flip = rng.choice(x0.size, size=add_noise_bits, replace=False)
+                x0[idx_flip] *= -1
+
+            _, E_series = hop.recall_and_energy(x0, max_iter=max_iter)
+            trial_series.append(np.array(E_series, dtype=float))
+
+        # Alinear longitudes rellenando con el último valor de cada serie
+        max_len = max(len(s) for s in trial_series)
+        aligned = []
+        for s in trial_series:
+            if len(s) < max_len:
+                pad = np.full(max_len - len(s), s[-1])
+                aligned.append(np.concatenate([s, pad]))
+            else:
+                aligned.append(s)
+        aligned = np.stack(aligned, axis=0)        # shape: (trials, max_len)
+        mean_per_step = aligned.mean(axis=0)       # energía promedio por paso
+
+        energies_avg.append(mean_per_step)
+        energies_trials.append(trial_series)
+
+    return energies_avg, energies_trials
+
 ROWS = 5
 COLS = 5
 
@@ -141,58 +185,27 @@ def main():
 
     patterns = get_initial_patterns()  
 
-    noise_bits, acc, acc_per_pat = accuracy_by_step(
-        initial_patterns=patterns,
-        rows=ROWS,
-        cols=COLS,
-        trials_per_level=100,           # tiradas
-        treat_negative_as_match=True,  # typical for Hopfield
-        seed=123
-    )
+    # noise_bits, acc, acc_per_pat = accuracy_by_step(
+    #     initial_patterns=patterns,
+    #     rows=ROWS,
+    #     cols=COLS,
+    #     trials_per_level=100,           # tiradas
+    #     treat_negative_as_match=True,  # typical for Hopfield
+    #     seed=123
+    # )
 
-    plot_accuracy(noise_bits, acc, acc_per_pat,
-                  title=f"Tasa de aciertos vs. ruido")
+    # plot_accuracy(noise_bits, acc, acc_per_pat,
+    #               title=f"Tasa de aciertos vs. ruido")
 
-
-    
-
-    # for idx, noise_bits, input in inputs:
-        #reset hopfield network for each input
-    # hop = HopfieldNetwork(NETWORK_SIZE=ROWS*COLS, starting_patterns=patterns)
-    # ELEMENT = 20
-    # results_by_step = hop.recall(inputs[ELEMENT][2])  #ejemplo con el input con 2 bits de ruido del patron 0
-    # print(f'Results for pattern {inputs[ELEMENT][0]} with {inputs[ELEMENT][1]} noise bits:')
-    # print(results_by_step )
-    # for step, result in enumerate(results_by_step):
-    #     out_path = f"output_hopfield/pattern_{inputs[ELEMENT][0]}/_noise_{inputs[ELEMENT][1]}/_step_{step}.png"
-    #     save_matrix_image(
-    #         result,
-    #         out_path,
-    #         cell_size=40,
-    #         margin=2,
-    #         on_color=(255, 255, 255),
-    #         off_color=(0, 0, 0),
-    #         bg=(24, 24, 24),
-    #     )
-
-    #======== Para comprobar los patrones originales ========
-    # a= 22
-    # for pattern in patterns:
-    #     print(f"Procesando {pattern}")
-    #     process_and_save(pattern, hop, idx=(a:=a+1))
-
-    # #se observa un estado espuereo para todos los outputs con la letra C
-
-    # # Esperar para que puedas ver la última pantalla antes de cerrar
-    # done = False
-    # while not done:
-    #     for e in pygame.event.get():
-    #         if e.type == pygame.QUIT:
-    #             done = True
-    # pygame.quit()
-
-    # print("Precisión por paso:")
-    # accuracy_by_step(hop)
+    energies_avg, energies_trials = avg_energy_by_step(
+    get_initial_patterns=get_initial_patterns,
+    HopfieldNetwork=HopfieldNetwork,
+    network_size=25,
+    trials=100,
+    max_iter=100,
+    add_noise_bits=0,
+    seed=42)
+    plot_avg_energies(energies_avg)
 
 if __name__ == "__main__":
     main()

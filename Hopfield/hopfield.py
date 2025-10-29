@@ -87,3 +87,42 @@ class HopfieldNetwork:
         #return all results by step
         #access last result with results_by_step[-1]
         return results_by_step
+    
+
+    def recall_and_energy(self, pattern: np.array, max_iter=100):
+        """
+        Realiza recall asíncrono y registra energía en cada paso (incluye estado inicial).
+        Devuelve:
+        results_by_step: [s^0, s^1, ..., s^T]
+        energy_by_step:  [E(s^0), E(s^1), ..., E(s^T)]
+        """
+        if len(pattern) != self.network_size:
+            raise ValueError("Input pattern size must match the network size.")
+        
+        results_by_step = []
+        energy_by_step = []
+
+        current = pattern.copy()
+        results_by_step.append(current.copy())
+
+        # energía inicial E = -0.5 * s^T W s
+        E = -0.5 * np.sum(self.weights * np.outer(current, current))
+        energy_by_step.append(E)
+
+        for _ in range(max_iter):
+            changed = False
+            for i in range(self.network_size):
+                h_i = np.dot(self.weights[i], current)
+                new_state = 1 if h_i >= 0 else -1
+                if new_state != current[i]:
+                    current[i] = new_state
+                    changed = True
+
+            results_by_step.append(current.copy())
+            E = -0.5 * np.sum(self.weights * np.outer(current, current))
+            energy_by_step.append(E)
+
+            if not changed:
+                break
+
+        return results_by_step, energy_by_step

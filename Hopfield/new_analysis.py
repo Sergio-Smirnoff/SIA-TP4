@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from hopfield import HopfieldNetwork
-
+from draw_utils import save_matrix_image
 
 # ==============================================================
 # === Definición de patrones ==================================
@@ -190,6 +190,7 @@ def test_stability_and_recall(network, base_patterns, pattern_names):
                                            if i != base_idx)
                     if not is_other_pattern:
                         results["spurious"] += 1
+                        # save_matrix_image(recalled, f"spurious_patterns:{len(base_patterns)}_{base_idx}_{noise_bits}.png")
                     else:
                         results["spurious"] += 1
 

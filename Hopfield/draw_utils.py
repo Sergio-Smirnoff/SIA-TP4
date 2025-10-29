@@ -206,4 +206,18 @@ def plot_accuracy(noise_bits, accuracy, accuracy_per_pattern=None, title="Tasa d
     plt.grid(True, linestyle='--', alpha=0.4)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig("accuracy_vs_noise.png")
+
+def plot_avg_energies(energies_avg, title="Energía promedio por paso (Hopfield)"):
+    plt.figure(figsize=(7,4.5))
+    for i, meanE in enumerate(energies_avg):
+        plt.plot(meanE, label=f'{get_pattern_letter(i)}', marker='o')
+    plt.xlabel("Paso de actualización")
+    plt.ylabel("Energía promedio")
+    plt.title(title)
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("avg_energy_per_step.png")
+
+
