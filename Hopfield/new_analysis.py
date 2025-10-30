@@ -190,9 +190,12 @@ def test_stability_and_recall(network, base_patterns, pattern_names):
                                            if i != base_idx)
                     if not is_other_pattern:
                         results["spurious"] += 1
-                        # save_matrix_image(recalled, f"spurious_patterns:{len(base_patterns)}_{base_idx}_{noise_bits}.png")
+                        if(len(base_patterns) <3):
+                            save_matrix_image(recalled, f"spurious_patterns:{len(base_patterns)}_{base_idx}_{noise_bits}.png")
                     else:
                         results["spurious"] += 1
+                        if(len(base_patterns) <3):
+                            save_matrix_image(recalled, f"spurious_patterns:{len(base_patterns)}_{base_idx}_{noise_bits}.png")
 
         total_tests = len(base_patterns) * num_tests_per_level
         acc_pct = (results["correct"] / total_tests) * 100
